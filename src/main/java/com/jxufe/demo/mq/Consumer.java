@@ -24,7 +24,8 @@ import java.util.Objects;
  **/
 @Slf4j
 @Component
-@RocketMQMessageListener(topic = "binlog_topic", consumerGroup = "binlog_consumer_group", selectorExpression = "binlog_tag")
+@RocketMQMessageListener(topic = "binlog_topic", consumerGroup = "binlog_consumer_group"
+        , selectorExpression = "binlog_tag", maxReconsumeTimes = 3)
 public class Consumer implements RocketMQListener<MessageExt> {
 
     @Override
@@ -36,7 +37,7 @@ public class Consumer implements RocketMQListener<MessageExt> {
         log.info("修改库表：{}.{}", binlog.getDatabase(), binlog.getTable());
         log.info("操作类型：{}", binlog.getType());
         log.info("新数据：{}", binlog.getData());
-        log.info("修改数据：{}", binlog.getOld());
+        log.info("旧数据：{}", binlog.getOld());
         List<String> splitNameList = new ArrayList<>();
         if (Objects.nonNull(binlog.getData())) {
             for (Object datum : binlog.getData()) {
