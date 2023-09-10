@@ -8,11 +8,13 @@ spring:
     password: root
     username: root
     url: jdbc:mysql://127.0.0.1:3306/education_0?serverTimezone=GMT%2b8
+canal:
+  server: 127.0.0.1
+  port: 11111
 rocketmq:
   name-server: 127.0.0.1:9876
-#  producer:
-#    group: binlog_producer_group
-## mybatis-plus
+  producer:
+    group: binlog_producer_group
 mybatis-plus:
   mapper-locations: classpath*:mybatis/*.xml
   type-aliases-package: com.ljq.demo.springboot.sharding.jdbc.model.entity

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @Author wlb
@@ -29,26 +30,29 @@ public class Consumer implements RocketMQListener<MessageExt> {
     @Override
     public void onMessage(MessageExt message) {
         Object parse = JSONObject.parse(message.getBody());
-        BinlogConsumerDTO binlog = JSONObject.parseObject(parse.toString(), BinlogConsumerDTO.class);
+        BinlogMessageBO binlog = JSONObject.parseObject(parse.toString(), BinlogMessageBO.class);
         log.info("==============consumer消费binlog==============");
+        log.info("messageId：{}", message.getMsgId());
         log.info("修改库表：{}.{}", binlog.getDatabase(), binlog.getTable());
         log.info("操作类型：{}", binlog.getType());
         log.info("新数据：{}", binlog.getData());
         log.info("修改数据：{}", binlog.getOld());
         List<String> splitNameList = new ArrayList<>();
-        for (Object datum : binlog.getData()) {
-            AclUser user = JSON.parseObject(JSON.toJSONString(datum), AclUser.class);
-            log.info("分词前name：{}", user.getUsername());
-            try {
-                StringReader reader = new StringReader(user.getUsername());
-                IKSegmentation segmenter = new IKSegmentation (reader, false);
-                Lexeme lexeme;
-                while ((lexeme = segmenter.next()) != null) {
-                    splitNameList.add(lexeme.getLexemeText());
+        if (Objects.nonNull(binlog.getData())) {
+            for (Object datum : binlog.getData()) {
+                AclUser user = JSON.parseObject(JSON.toJSONString(datum), AclUser.class);
+                try {
+                    StringReader reader = new StringReader(user.getUsername());
+                    IKSegmentation segmenter = new IKSegmentation(reader, Boolean.FALSE);
+                    Lexeme lexeme;
+                    while ((lexeme = segmenter.next()) != null) {
+                        splitNameList.add(lexeme.getLexemeText());
+                    }
+                    log.info("分词前name：{}", user.getUsername());
+                    log.info("分词后name：{}", StringUtils.join(splitNameList, ", "));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                log.info("分词后name：{}", StringUtils.join(splitNameList, ", "));
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
