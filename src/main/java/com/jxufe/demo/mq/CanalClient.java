@@ -1,7 +1,9 @@
 package com.jxufe.demo.mq;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 import com.alibaba.fastjson.JSON;
@@ -118,7 +120,12 @@ public class CanalClient implements ApplicationRunner {
 
                 String msgBody = JSON.toJSONString(messageBO);
                 log.info("canal监听数据发送至mq {} ",msgBody);
-                rocketMqTemplate.sendOneWay("binlog_topic:binlog_tag", MessageBuilder.withPayload(msgBody).build());
+                Map<String, String> map = new HashMap<>();
+                for (Column column : rowData.getAfterColumnsList()) {
+                    map.put(column.getName(), column.getValue());
+                }
+                String hashKey = messageBO.getDatabase() + messageBO.getTable() + rowData.getAfterColumnsList() + map.get("id");
+                rocketMqTemplate.sendOneWayOrderly("binlog_topic:binlog_tag", MessageBuilder.withPayload(msgBody).build(), hashKey);
             }
 
         }
