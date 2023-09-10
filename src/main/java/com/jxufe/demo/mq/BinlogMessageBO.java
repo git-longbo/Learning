@@ -15,7 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class BinlogConsumerDTO {
+public class BinlogMessageBO {
     private Integer id;
     private JSONArray data;
     private JSONArray pkNames;
