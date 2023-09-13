@@ -1,6 +1,7 @@
 package com.jxufe.demo.mq;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,10 @@ import com.alibaba.otter.canal.protocol.CanalEntry.RowData;
 import com.alibaba.otter.canal.protocol.Message;
 
 import com.google.common.collect.Lists;
+import com.sun.javafx.binding.StringConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,8 +44,16 @@ public class CanalClient implements ApplicationRunner {
 
     @Value("${canal.server}")
     private String server;
+
     @Value("${canal.port}")
     private Integer port;
+
+    @Value("${canal.examples}")
+    private String exampleNames;
+
+    @Value("${canal.subscribes}")
+    private String subscribes;
+
     public static List<CanalConnector> examples = Lists.newArrayList();
     @Autowired
     private RocketMQTemplate rocketMqTemplate;
@@ -52,18 +63,17 @@ public class CanalClient implements ApplicationRunner {
     @Override
     @Async
     public void run(ApplicationArguments args) {
-        // 创建链接
-        CanalConnector connector1 = CanalConnectors.newSingleConnector(new InetSocketAddress(server,
-                port), "example", "", "");
-        CanalConnector connector2 = CanalConnectors.newSingleConnector(new InetSocketAddress(server,
-                port), "example2", "", "");
-        examples.add(connector1);
-        examples.add(connector2);
+        List<String> exampleList = Arrays.asList(exampleNames.split(","));
+        List<String> subscribeList = Arrays.asList(subscribes.split(","));
+
+        for (int i = 0; i < exampleList.size(); i++) {
+            CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress(server,
+                    port), exampleList.get(i), "", "");
+            connector.connect();
+            connector.subscribe(subscribeList.get(i));
+            examples.add(connector);
+        }
         try {
-            connector1.connect();
-            connector2.connect();
-            connector1.subscribe("education_0\\..*");
-            connector2.subscribe("education_1\\..*");
             while (true) {
                 for (CanalConnector connector : examples) {
                     //回滚到未进行ack的地方，下次fetch的时候，可以从最后一个没有ack的地方开始
@@ -119,7 +129,7 @@ public class CanalClient implements ApplicationRunner {
                 messageBO.setData(newData);
 
                 String msgBody = JSON.toJSONString(messageBO);
-                log.info("canal监听数据发送至mq {} ",msgBody);
+                log.info("canal监听数据发送至mq {} ", msgBody);
                 Map<String, String> map = new HashMap<>();
                 for (Column column : rowData.getAfterColumnsList()) {
                     map.put(column.getName(), column.getValue());
