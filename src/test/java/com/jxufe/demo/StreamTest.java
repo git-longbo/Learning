@@ -18,20 +18,21 @@ import static com.jxufe.demo.Person.distinctByKey;
 @SpringBootTest
 @Slf4j
 public class StreamTest {
-    private  final Logger logger =  LoggerFactory.getLogger(StreamTest.class);
+    private final Logger logger = LoggerFactory.getLogger(StreamTest.class);
+
     @Test
-    public void test(){
-        List<Integer> list = Arrays.asList(1,2,3,4,5,6);
+    public void test() {
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6);
         long count = list.stream().count();
         logger.info(String.valueOf(count));
 
-        Map<Integer,String> map = new HashMap<>();
-        map.put(1,"张老三");
-        map.put(2,"张小三");
-        map.put(3,"李四");
-        map.put(4,"赵五");
-        map.put(5,"张六");
-        map.put(6,"王八");
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "张老三");
+        map.put(2, "张小三");
+        map.put(3, "李四");
+        map.put(4, "赵五");
+        map.put(5, "张六");
+        map.put(6, "王八");
 
         // 3.1根据Map集合的键获取流
         Set<Integer> map1 = map.keySet();
@@ -44,17 +45,17 @@ public class StreamTest {
     }
 
     @Test
-    public void test2(){
+    public void test2() {
         // 获取stream流
         Stream<String> stream = Stream.of("张老三", "张小三", "李四", "赵五", "刘六", "王七");
         // 需求：过去出姓张的元素
-        stream.filter( name -> name.startsWith("张")).forEach(name-> System.out.println(name));
+        stream.filter(name -> name.startsWith("张")).forEach(name -> System.out.println(name));
         List<String> collect = stream.collect(Collectors.toList());
     }
 
     @Test
     // stream根据对象属性去重
-    public void test3(){
+    public void test3() {
         List<Person> personList = new ArrayList<Person>();
         personList.add(new Person("Tom", 8900, 23, "male", "New York"));
         personList.add(new Person("Tom", 7000, 25, "male", "Washington"));
@@ -69,7 +70,7 @@ public class StreamTest {
     }
 
     @Test
-    public void test4(){
+    public void test4() {
         List<Person> personList = new ArrayList<Person>();
         personList.add(new Person("Tom", 8900, 23, "male", "New York"));
         personList.add(new Person("Tom", 7000, 25, "male", "Washington"));
@@ -87,7 +88,8 @@ public class StreamTest {
     }
 
 }
-class Person{
+
+class Person {
     private String name;  // 姓名
     private int salary; // 薪资
     private int age; // 年龄
@@ -95,7 +97,7 @@ class Person{
     private String area;  // 地区
 
     // 构造方法
-    public Person(String name, int salary, int age,String sex,String area) {
+    public Person(String name, int salary, int age, String sex, String area) {
         this.name = name;
         this.salary = salary;
         this.age = age;
@@ -154,6 +156,7 @@ class Person{
                 ", area='" + area + '\'' +
                 '}';
     }
+
     public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> seen = new ConcurrentHashMap<>();
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;

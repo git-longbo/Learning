@@ -10,10 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- *
  * @author:
  * @date: 2023/5/16 22:10
-
  **/
 @Data
 @TableName("acl_user")

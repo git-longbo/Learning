@@ -8,9 +8,14 @@ spring:
     password: root
     username: root
     url: jdbc:mysql://127.0.0.1:3306/education_0?serverTimezone=GMT%2b8
+  elasticsearch:
+    uris: 127.0.0.1:9200
+
 canal:
   server: 127.0.0.1
   port: 11111
+  examples: example,example2
+  subscribes: education_0\..*,education_1\..*
 rocketmq:
   name-server: 127.0.0.1:9876
   producer:

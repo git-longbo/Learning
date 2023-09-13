@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @MapperScan("com.jxufe.demo.mapper")
 @EnableAsync
 public class BootStarter {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         SpringApplication.run(BootStarter.class, args);
     }
 }
