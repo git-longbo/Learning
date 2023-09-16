@@ -14,8 +14,11 @@ spring:
 canal:
   server: 127.0.0.1
   port: 11111
-  examples: example,example2
-  subscribes: education_0\..*,education_1\..*
+  examples:
+    - name: example
+      subscribe: education_0\..*
+    - name: example2
+      subscribe: education_1\..*
 rocketmq:
   name-server: 127.0.0.1:9876
   producer:
