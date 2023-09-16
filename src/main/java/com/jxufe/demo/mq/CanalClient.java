@@ -1,7 +1,6 @@
 package com.jxufe.demo.mq;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +9,8 @@ import java.util.Map;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.client.CanalConnector;
+import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.Column;
 import com.alibaba.otter.canal.protocol.CanalEntry.Entry;
 import com.alibaba.otter.canal.protocol.CanalEntry.EntryType;
@@ -21,13 +20,10 @@ import com.alibaba.otter.canal.protocol.CanalEntry.RowData;
 import com.alibaba.otter.canal.protocol.Message;
 
 import com.google.common.collect.Lists;
-import com.sun.javafx.binding.StringConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.messaging.support.MessageBuilder;
@@ -42,40 +38,29 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CanalClient implements ApplicationRunner {
 
-    @Value("${canal.server}")
-    private String server;
-
-    @Value("${canal.port}")
-    private Integer port;
-
-    @Value("${canal.examples}")
-    private String exampleNames;
-
-    @Value("${canal.subscribes}")
-    private String subscribes;
-
-    public static List<CanalConnector> examples = Lists.newArrayList();
     @Autowired
     private RocketMQTemplate rocketMqTemplate;
+
+    @Autowired
+    private CanalExample canalExample;
 
     private final Integer BATCH_SIZE = 1000;
 
     @Override
     @Async
     public void run(ApplicationArguments args) {
-        List<String> exampleList = Arrays.asList(exampleNames.split(","));
-        List<String> subscribeList = Arrays.asList(subscribes.split(","));
-
-        for (int i = 0; i < exampleList.size(); i++) {
-            CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress(server,
-                    port), exampleList.get(i), "", "");
+        List<CanalConnector> connects = Lists.newArrayList();
+        List<CanalExample.Example> examples = canalExample.getExamples();
+        for (CanalExample.Example example : examples) {
+            CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress(canalExample.getServer(),
+                    canalExample.getPort()), example.getName(), "", "");
             connector.connect();
-            connector.subscribe(subscribeList.get(i));
-            examples.add(connector);
+            connector.subscribe(example.getSubscribe());
+            connects.add(connector);
         }
         try {
             while (true) {
-                for (CanalConnector connector : examples) {
+                for (CanalConnector connector : connects) {
                     //回滚到未进行ack的地方，下次fetch的时候，可以从最后一个没有ack的地方开始
                     connector.rollback();
                     Message message = connector.getWithoutAck(BATCH_SIZE);
@@ -95,7 +80,7 @@ public class CanalClient implements ApplicationRunner {
                 }
             }
         } finally {
-            for (CanalConnector connector : examples) {
+            for (CanalConnector connector : connects) {
                 connector.disconnect();
             }
         }
